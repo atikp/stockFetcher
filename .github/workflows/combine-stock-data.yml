@@ -1,0 +1,32 @@
+name: Combine Stock Data
+
+on:
+  schedule:
+    - cron: "30 0 * * *"  # Run at 00:30 UTC every day
+  workflow_dispatch:  # Allow manual triggers
+
+jobs:
+  combine-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Combine JSON files
+        run: |
+          echo '{"nasdaq": ' > all_full_tickers.json
+          cat nasdaq/nasdaq_full_tickers.json >> all_full_tickers.json
+          echo ', "nyse": ' >> all_full_tickers.json
+          cat nyse/nyse_full_tickers.json >> all_full_tickers.json
+          echo ', "amex": ' >> all_full_tickers.json
+          cat amex/amex_full_tickers.json >> all_full_tickers.json
+          echo '}' >> all_full_tickers.json
+      
+      - name: Commit and push changes
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add all_full_tickers.json
+          git diff --staged --quiet || git commit -m "Update combined stock data"
+          git push || echo "No changes to push"
