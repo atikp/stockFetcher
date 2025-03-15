@@ -1,0 +1,47 @@
+name: Fetch Icon Folders Monthly
+
+on:
+  schedule:
+    - cron: "0 0 1 * *"  # Run at midnight on the 1st day of each month
+  workflow_dispatch:  # Allow manual triggers
+
+jobs:
+  fetch-icons:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up directories
+        run: |
+          mkdir -p icons
+
+      - name: Install svn (for sparse checkout from GitHub)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y subversion
+      
+      - name: Fetch crypto_icons folder
+        run: |
+          svn export https://github.com/nvstly/icons/trunk/crypto_icons icons/crypto_icons
+      
+      - name: Fetch exchange_icons folder
+        run: |
+          svn export https://github.com/nvstly/icons/trunk/exchange_icons icons/exchange_icons
+      
+      - name: Fetch forex_icons folder
+        run: |
+          svn export https://github.com/nvstly/icons/trunk/forex_icons icons/forex_icons
+      
+      - name: Fetch ticker_icons folder
+        run: |
+          svn export https://github.com/nvstly/icons/trunk/ticker_icons icons/ticker_icons
+      
+      - name: Commit and push changes
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add icons/
+          git diff --staged --quiet || git commit -m "Update icon folders (monthly fetch)"
+          git push || echo "No changes to push"
