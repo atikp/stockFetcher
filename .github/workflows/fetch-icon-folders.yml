@@ -12,36 +12,26 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      
-      - name: Set up directories
-        run: |
-          mkdir -p icons
 
-      - name: Install svn (for sparse checkout from GitHub)
+      - name: Set up directories
+        run: mkdir -p icons
+
+      - name: Clone repository with sparse checkout
         run: |
-          sudo apt-get update
-          sudo apt-get install -y subversion
-      
-      - name: Fetch crypto_icons folder
-        run: |
-          svn export https://github.com/nvstly/icons/tree/main/crypto_icons icons/crypto_icons
-      
-      - name: Fetch exchange_icons folder
-        run: |
-          svn export https://github.com/nvstly/icons/tree/exchange_icons icons/exchange_icons
-      
-      - name: Fetch forex_icons folder
-        run: |
-          svn export https://github.com/nvstly/icons/tree/forex_icons icons/forex_icons
-      
-      - name: Fetch ticker_icons folder
-        run: |
-          svn export https://github.com/nvstly/icons/tree/ticker_icons icons/ticker_icons
-      
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/nvstly/icons.git temp_icons
+          cd temp_icons
+          git sparse-checkout set crypto_icons exchange_icons forex_icons ticker_icons
+          mv crypto_icons ../icons/crypto_icons
+          mv exchange_icons ../icons/exchange_icons
+          mv forex_icons ../icons/forex_icons
+          mv ticker_icons ../icons/ticker_icons
+          cd ..
+          rm -rf temp_icons
+
       - name: Commit and push changes
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
           git add icons/
           git diff --staged --quiet || git commit -m "Update icon folders (monthly fetch)"
           git push || echo "No changes to push"
