@@ -24,19 +24,19 @@ jobs:
       
       - name: Fetch crypto_icons folder
         run: |
-          svn export https://github.com/nvstly/icons/trunk/crypto_icons icons/crypto_icons
+          svn export https://github.com/nvstly/icons/tree/main/crypto_icons icons/crypto_icons
       
       - name: Fetch exchange_icons folder
         run: |
-          svn export https://github.com/nvstly/icons/trunk/exchange_icons icons/exchange_icons
+          svn export https://github.com/nvstly/icons/tree/exchange_icons icons/exchange_icons
       
       - name: Fetch forex_icons folder
         run: |
-          svn export https://github.com/nvstly/icons/trunk/forex_icons icons/forex_icons
+          svn export https://github.com/nvstly/icons/tree/forex_icons icons/forex_icons
       
       - name: Fetch ticker_icons folder
         run: |
-          svn export https://github.com/nvstly/icons/trunk/ticker_icons icons/ticker_icons
+          svn export https://github.com/nvstly/icons/tree/ticker_icons icons/ticker_icons
       
       - name: Commit and push changes
         run: |
