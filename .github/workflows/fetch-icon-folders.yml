@@ -15,13 +15,8 @@ jobs:
 
       - name: Set up directories
         run: |
-          # Create all necessary directories using absolute paths
-          mkdir -p ${GITHUB_WORKSPACE}/icons/crypto_icons
-          mkdir -p ${GITHUB_WORKSPACE}/icons/exchange_icons
-          mkdir -p ${GITHUB_WORKSPACE}/icons/forex_icons
-          mkdir -p ${GITHUB_WORKSPACE}/icons/ticker_icons
+          # Create stock_icons directory
           mkdir -p ${GITHUB_WORKSPACE}/icons/stock_icons
-          mkdir -p ${GITHUB_WORKSPACE}/temp_processing
 
       - name: Clone nvstly repository with sparse checkout
         run: |
@@ -29,11 +24,26 @@ jobs:
           cd ${GITHUB_WORKSPACE}/temp_icons
           git sparse-checkout set crypto_icons exchange_icons forex_icons ticker_icons
           
-          # Use absolute paths for moving files
-          cp -r ${GITHUB_WORKSPACE}/temp_icons/crypto_icons/* ${GITHUB_WORKSPACE}/icons/crypto_icons/ || true
-          cp -r ${GITHUB_WORKSPACE}/temp_icons/exchange_icons/* ${GITHUB_WORKSPACE}/icons/exchange_icons/ || true
-          cp -r ${GITHUB_WORKSPACE}/temp_icons/forex_icons/* ${GITHUB_WORKSPACE}/icons/forex_icons/ || true
-          cp -r ${GITHUB_WORKSPACE}/temp_icons/ticker_icons/* ${GITHUB_WORKSPACE}/icons/ticker_icons/ || true
+          # Copy all icons from different categories directly into stock_icons
+          find ${GITHUB_WORKSPACE}/temp_icons/crypto_icons -type f -name "*.png" -o -name "*.jpg" -o -name "*.svg" | while read file; do
+            filename=$(basename "$file")
+            cp "$file" "${GITHUB_WORKSPACE}/icons/stock_icons/$filename" || true
+          done
+          
+          find ${GITHUB_WORKSPACE}/temp_icons/exchange_icons -type f -name "*.png" -o -name "*.jpg" -o -name "*.svg" | while read file; do
+            filename=$(basename "$file")
+            cp "$file" "${GITHUB_WORKSPACE}/icons/stock_icons/$filename" || true
+          done
+          
+          find ${GITHUB_WORKSPACE}/temp_icons/forex_icons -type f -name "*.png" -o -name "*.jpg" -o -name "*.svg" | while read file; do
+            filename=$(basename "$file")
+            cp "$file" "${GITHUB_WORKSPACE}/icons/stock_icons/$filename" || true
+          done
+          
+          find ${GITHUB_WORKSPACE}/temp_icons/ticker_icons -type f -name "*.png" -o -name "*.jpg" -o -name "*.svg" | while read file; do
+            filename=$(basename "$file")
+            cp "$file" "${GITHUB_WORKSPACE}/icons/stock_icons/$filename" || true
+          done
           
           # Clean up
           rm -rf ${GITHUB_WORKSPACE}/temp_icons
@@ -60,12 +70,11 @@ jobs:
           
           # Clean up
           rm -rf ${GITHUB_WORKSPACE}/temp_nasdaq
-          rm -rf ${GITHUB_WORKSPACE}/temp_processing
 
       - name: Commit and push changes
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add icons/
-          git diff --staged --quiet || git commit -m "Update icon folders (monthly fetch)"
+          git diff --staged --quiet || git commit -m "Update consolidated icon folders (monthly fetch)"
           git push || echo "No changes to push"
