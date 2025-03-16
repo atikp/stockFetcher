@@ -14,54 +14,53 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up directories
-        run: mkdir -p icons
+        run: |
+          # Create all necessary directories using absolute paths
+          mkdir -p ${GITHUB_WORKSPACE}/icons/crypto_icons
+          mkdir -p ${GITHUB_WORKSPACE}/icons/exchange_icons
+          mkdir -p ${GITHUB_WORKSPACE}/icons/forex_icons
+          mkdir -p ${GITHUB_WORKSPACE}/icons/ticker_icons
+          mkdir -p ${GITHUB_WORKSPACE}/icons/stock_icons
+          mkdir -p ${GITHUB_WORKSPACE}/temp_processing
 
       - name: Clone nvstly repository with sparse checkout
         run: |
-          git clone --depth 1 --filter=blob:none --sparse https://github.com/nvstly/icons.git temp_icons
-          cd temp_icons
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/nvstly/icons.git ${GITHUB_WORKSPACE}/temp_icons
+          cd ${GITHUB_WORKSPACE}/temp_icons
           git sparse-checkout set crypto_icons exchange_icons forex_icons ticker_icons
-          mv crypto_icons ../icons/crypto_icons
-          mv exchange_icons ../icons/exchange_icons
-          mv forex_icons ../icons/forex_icons
-          mv ticker_icons ../icons/ticker_icons
-          cd ..
-          rm -rf temp_icons
+          
+          # Use absolute paths for moving files
+          cp -r ${GITHUB_WORKSPACE}/temp_icons/crypto_icons/* ${GITHUB_WORKSPACE}/icons/crypto_icons/ || true
+          cp -r ${GITHUB_WORKSPACE}/temp_icons/exchange_icons/* ${GITHUB_WORKSPACE}/icons/exchange_icons/ || true
+          cp -r ${GITHUB_WORKSPACE}/temp_icons/forex_icons/* ${GITHUB_WORKSPACE}/icons/forex_icons/ || true
+          cp -r ${GITHUB_WORKSPACE}/temp_icons/ticker_icons/* ${GITHUB_WORKSPACE}/icons/ticker_icons/ || true
+          
+          # Clean up
+          rm -rf ${GITHUB_WORKSPACE}/temp_icons
 
       - name: Clone ahmeterenodaci repository and process icons
         run: |
-          # Clone the ahmeterenodaci repository
-          git clone --depth 1 https://github.com/ahmeterenodaci/Nasdaq-Stock-Exchange-including-Symbols-and-Logos.git temp_nasdaq
+          # Clone the repository
+          git clone --depth 1 https://github.com/ahmeterenodaci/Nasdaq-Stock-Exchange-including-Symbols-and-Logos.git ${GITHUB_WORKSPACE}/temp_nasdaq
           
-          # Create destination directories
-          mkdir -p icons/stock_icons
-          mkdir -p temp_processing
-          
-          # Process the logo files - remove underscores and check for duplicates
-          cd temp_nasdaq/logos
-          
-          for file in *; do
-            if [ -f "$file" ]; then
-              # Remove underscore from filename
-              new_name=$(echo "$file" | sed 's/^_//')
-              
-              # Check if the file already exists in our icons directory
-              if [ ! -f "../../../icons/stock_icons/$new_name" ]; then
-                # File doesn't exist in destination, copy it
-                cp "$file" "../../../temp_processing/$new_name"
-              else
-                echo "Skipping duplicate file: $new_name"
-              fi
+          # Process each file individually with absolute paths
+          find ${GITHUB_WORKSPACE}/temp_nasdaq/logos -type f -name "*.png" -o -name "*.jpg" -o -name "*.svg" | while read file; do
+            filename=$(basename "$file")
+            # Remove leading underscore if present
+            new_filename=$(echo "$filename" | sed 's/^_//')
+            
+            # Check if file already exists in destination
+            if [ ! -f "${GITHUB_WORKSPACE}/icons/stock_icons/$new_filename" ]; then
+              echo "Copying $filename as $new_filename"
+              cp "$file" "${GITHUB_WORKSPACE}/icons/stock_icons/$new_filename"
+            else
+              echo "Skipping duplicate: $new_filename"
             fi
           done
           
-          # Move the processed files to the final destination
-          cd ../../../
-          cp -r temp_processing/* icons/stock_icons/ 2>/dev/null || true
-          
-          # Clean up temporary directories
-          rm -rf temp_nasdaq
-          rm -rf temp_processing
+          # Clean up
+          rm -rf ${GITHUB_WORKSPACE}/temp_nasdaq
+          rm -rf ${GITHUB_WORKSPACE}/temp_processing
 
       - name: Commit and push changes
         run: |
