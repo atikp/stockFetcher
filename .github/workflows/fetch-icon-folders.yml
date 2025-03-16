@@ -16,7 +16,7 @@ jobs:
       - name: Set up directories
         run: mkdir -p icons
 
-      - name: Clone repository with sparse checkout
+      - name: Clone nvstly repository with sparse checkout
         run: |
           git clone --depth 1 --filter=blob:none --sparse https://github.com/nvstly/icons.git temp_icons
           cd temp_icons
@@ -27,6 +27,43 @@ jobs:
           mv ticker_icons ../icons/ticker_icons
           cd ..
           rm -rf temp_icons
+
+      - name: Clone ahmeterenodaci repository and process icons
+        run: |
+          # Create a temporary directory for processing
+          mkdir -p temp_processing
+          
+          # Clone the ahmeterenodaci repository
+          git clone --depth 1 https://github.com/ahmeterenodaci/Nasdaq-Stock-Exchange-including-Symbols-and-Logos.git temp_nasdaq
+          
+          # Create a destination directory for stock icons if it doesn't exist
+          mkdir -p icons/stock_icons
+          
+          # Process the logo files - remove underscores and check for duplicates
+          cd temp_nasdaq/logos
+          
+          for file in *; do
+            if [ -f "$file" ]; then
+              # Remove underscore from filename
+              new_name=$(echo "$file" | sed 's/^_//')
+              
+              # Check if the file already exists in our icons directory
+              if [ ! -f "../../../icons/stock_icons/$new_name" ]; then
+                # File doesn't exist in destination, copy it
+                cp "$file" "../../../temp_processing/$new_name"
+              else
+                echo "Skipping duplicate file: $new_name"
+              fi
+            fi
+          done
+          
+          # Move the processed files to the final destination
+          cd ../../../
+          mv temp_processing/* icons/stock_icons/ 2>/dev/null || true
+          
+          # Clean up temporary directories
+          rm -rf temp_nasdaq
+          rm -rf temp_processing
 
       - name: Commit and push changes
         run: |
