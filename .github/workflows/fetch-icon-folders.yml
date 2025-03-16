@@ -30,14 +30,12 @@ jobs:
 
       - name: Clone ahmeterenodaci repository and process icons
         run: |
-          # Create a temporary directory for processing
-          mkdir -p temp_processing
-          
           # Clone the ahmeterenodaci repository
           git clone --depth 1 https://github.com/ahmeterenodaci/Nasdaq-Stock-Exchange-including-Symbols-and-Logos.git temp_nasdaq
           
-          # Create a destination directory for stock icons if it doesn't exist
+          # Create destination directories
           mkdir -p icons/stock_icons
+          mkdir -p temp_processing
           
           # Process the logo files - remove underscores and check for duplicates
           cd temp_nasdaq/logos
@@ -59,7 +57,7 @@ jobs:
           
           # Move the processed files to the final destination
           cd ../../../
-          mv temp_processing/* icons/stock_icons/ 2>/dev/null || true
+          cp -r temp_processing/* icons/stock_icons/ 2>/dev/null || true
           
           # Clean up temporary directories
           rm -rf temp_nasdaq
